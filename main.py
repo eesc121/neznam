@@ -15,7 +15,7 @@ app.add_middleware(
 @app.get("/api/oglasi")
 async def oglasi():
     try:
-        url = "http://api.scraperapi.com?api_key=568f532b77acf94aa5e40033d880fd15&url=https://www.willhaben.at/iad/gebrauchtwagen/auto/gebrauchtwagenboerse?PRICE_TO=15000&YEAR_MODEL_FROM=1990&YEAR_MODEL_TO=2025"
+        url = "http://api.scraperapi.com?api_key=568f532b77acf94aa5e40033d880fd15&url=https://www.willhaben.at/iad/gebrauchtwagen/auto/gebrauchtwagenboerse?sfId=8310ab45-b9a6-457f-b075-c6307177c3c7&isNavigation=true&page=1&sort=1&rows=30&PRICE_TO=15000&YEAR_MODEL_FROM=1990&YEAR_MODEL_TO=2025"
 
         async with httpx.AsyncClient() as client:
             res = await client.get(url)
