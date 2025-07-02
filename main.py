@@ -15,33 +15,36 @@ app.add_middleware(
 @app.get("/api/oglasi")
 async def oglasi():
     try:
-        url = "http://api.scraperapi.com?api_key=568f532b77acf94aa5e40033d880fd15&url=https://www.willhaben.at/iad/gebrauchtwagen/auto/gebrauchtwagenboerse?PRICE_TO=15000&YEAR_MODEL_FROM=1990&YEAR_MODEL_TO=2025"
+        scraperapi_key = "568f532b77acf94aa5e40033d880fd15"
+        target_url = "https://www.willhaben.at/iad/gebrauchtwagen/auto/gebrauchtwagenboerse?PRICE_TO=15000&YEAR_MODEL_FROM=1990&YEAR_MODEL_TO=2025"
+        scraper_url = f"http://api.scraperapi.com?api_key={scraperapi_key}&url={target_url}&render=true"
+
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
 
         async with httpx.AsyncClient() as client:
-            res = await client.get(url)
-            print(f"Status code: {res.status_code}")
-            print(f"Content snippet: {res.text[:500]}")  # samo prvih 500 znakova da se ne zatrpaš
+            res = await client.get(scraper_url, headers=headers)
 
-            soup = BeautifulSoup(res.text, "lxml")
+        soup = BeautifulSoup(res.text, "lxml")
 
-            oglasi = []
+        oglasi = []
 
-            for ad in soup.select("article[data-testid='search-result-entry']"):
-                naslov = ad.select_one("h2") or ad.select_one("h3")
-                cijena = ad.select_one("span.Text-sc-1cyh90m-0")
-                link = ad.select_one("a")["href"] if ad.select_one("a") else ""
-                opis = ad.select_one("p") or ad.select_one("div")
+        # Ovde selektor može da se menja u zavisnosti od strukture
+        for ad in soup.select("article[data-testid='search-result-entry']"):
+            naslov = ad.select_one("h2")
+            cijena = ad.select_one("span")
+            link = ad.select_one("a")
+            opis = ad.select_one("p")
 
-                if naslov and cijena:
-                    oglasi.append({
-                        "naslov": naslov.text.strip(),
-                        "cijena": cijena.text.strip(),
-                        "link": f"https://www.willhaben.at{link}",
-                        "opis": opis.text.strip() if opis else "",
-                    })
+            if naslov and cijena:
+                oglasi.append({
+                    "naslov": naslov.text.strip(),
+                    "cijena": cijena.text.strip(),
+                    "link": f"https://www.willhaben.at{link['href']}" if link else "",
+                    "opis": opis.text.strip() if opis else ""
+                })
 
-            return oglasi
-
+        return oglasi
     except Exception as e:
-        print(f"Greška: {e}")
         return {"error": str(e)}
